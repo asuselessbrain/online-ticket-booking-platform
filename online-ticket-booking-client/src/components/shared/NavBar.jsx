@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router";
+import Logo from "./Logo";
 
 const NavBar = () => {
     const navLinks = [
@@ -18,7 +19,7 @@ const NavBar = () => {
     return (
         <header className="bg-[#01602a]">
             <nav className="max-w-[1440px] mx-auto px-2 2xl:px-0 py-4 flex justify-between items-center">
-                <h1 className="text-white text-2xl md:text-3xl font-bold">Bus365</h1>
+                <Logo />
                 <ul className="flex flex-col md:flex-row items-center gap-6">
                     {
                         navLinks.map((navLink, index) => (
