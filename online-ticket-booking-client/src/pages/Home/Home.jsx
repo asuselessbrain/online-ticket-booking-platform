@@ -1,13 +1,10 @@
-import { use } from "react";
-import { AuthContext } from "../../providers/AuthContext";
+import Hero from "../../components/Home/Hero";
 
 const Home = () => {
-    const {user} = use(AuthContext)
-    console.log(user)
     return (
-        <div>
-            This is home page
-        </div>
+        <section>
+           <Hero />
+        </section>
     );
 };
 
