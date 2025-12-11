@@ -1,7 +1,9 @@
 import { Link, NavLink } from "react-router";
 import Logo from "./Logo";
-import { useState } from "react";
+import { use, useState } from "react";
 import { IoMenu } from "react-icons/io5";
+import { AuthContext } from "../../providers/AuthContext";
+import { toast } from "react-toastify";
 
 const NavBar = () => {
     const navLinks = [
@@ -20,6 +22,16 @@ const NavBar = () => {
     ]
 
     const [isOpen, setIsOpen] = useState(false);
+    const { user, logout } = use(AuthContext)
+
+    const handelLogout = async () => {
+        try {
+            await logout();
+            toast.success("Logout successful!")
+        } catch (error) {
+            toast.error(error.message.split("/")[1].split(")")[0])
+        }
+    }
 
     return (
         <header className="bg-[#01602a]">
@@ -34,12 +46,21 @@ const NavBar = () => {
                         ))
                     }
                     <li className="w-full md:w-auto mt-2 md:mt-0">
-                        <Link
-                            to="/login"
-                            className="w-full block text-center md:w-auto bg-[#079d49] text-white px-4 py-2 rounded hover:bg-[#06863e] transition-all duration-700 font-semibold"
-                        >
-                            Login
-                        </Link>
+                        {
+                            user ? <button
+                                type="button"
+                                onClick={handelLogout}
+                                className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-500/50 font-medium rounded text-sm cursor-pointer px-4 py-2 text-center dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-500/50"
+                            >
+                                Logout
+                            </button> :
+                                <Link
+                                    to="/login"
+                                    className="w-full block text-center md:w-auto bg-[#079d49] text-white px-4 py-2 rounded hover:bg-[#06863e] transition-all duration-700 font-semibold"
+                                >
+                                    Login
+                                </Link>
+                        }
                     </li>
                 </ul>
                 <IoMenu size={30} className="block md:hidden text-white" onClick={() => setIsOpen(!isOpen)} />
