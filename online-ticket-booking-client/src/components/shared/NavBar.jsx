@@ -12,6 +12,10 @@ const NavBar = () => {
             link: '/'
         },
         {
+            name: 'All Tickets',
+            link: '/tickets'
+        },
+        {
             name: 'About',
             link: '/about'
         },
