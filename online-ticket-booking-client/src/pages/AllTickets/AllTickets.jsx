@@ -108,7 +108,7 @@ const AllTickets = ({ tickets = sampleTickets }) => {
 
   return (
     <main className="py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1440px] mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-extrabold text-slate-900">All Tickets</h1>
         </div>
