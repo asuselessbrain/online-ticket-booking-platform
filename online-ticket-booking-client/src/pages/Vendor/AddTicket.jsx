@@ -1,64 +1,73 @@
 import { use, useState } from "react";
 import { AuthContext } from "../../providers/AuthContext";
 import { toast } from "react-toastify";
+import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import api from "../../lib/axios";
 
 const AddTicket = () => {
   const { user } = use(AuthContext);
   const [submitting, setSubmitting] = useState(false);
-  console.log(user)
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: {
+      title: "",
+      from: "",
+      to: "",
+      transportType: "",
+      price: "",
+      quantity: "",
+      departureDate: "",
+      departureTime: "",
+      perks: [],
+      image: undefined,
+    }
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    const perks = formData.getAll("perks");
-    const imageFile = formData.get("image");
-
-    if (!imageFile || imageFile.size === 0) {
+  const onSubmit = async (data) => {
+    const imageFile = data.image?.[0];
+    if (!imageFile) {
       toast.error("Please select an image to upload.");
       return;
     }
 
-    const imgbbKey = import.meta.env.VITE_IMGBB_KEY;
-    if (!imgbbKey) {
-      toast.error("Missing imgbb API key (VITE_IMGBB_KEY).");
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+    if (!cloudName || !uploadPreset) {
+      toast.error("Missing Cloudinary config (VITE_CLOUDINARY_CLOUD_NAME, VITE_CLOUDINARY_UPLOAD_PRESET).");
       return;
     }
 
     setSubmitting(true);
     try {
       const imgFormData = new FormData();
-      imgFormData.append("image", imageFile);
-      const uploadRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
+      imgFormData.append("file", imageFile);
+      imgFormData.append("upload_preset", uploadPreset);
+      const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
         method: "POST",
         body: imgFormData,
       });
       const uploadJson = await uploadRes.json();
-      if (!uploadJson.success) {
+      if (!uploadRes.ok) {
         throw new Error(uploadJson?.error?.message || "Image upload failed");
       }
-      const imageUrl = uploadJson.data.url;
+      const image = uploadJson.secure_url || uploadJson.url;
 
       const payload = {
-        title: formData.get("title"),
-        from: formData.get("from"),
-        to: formData.get("to"),
-        transportType: formData.get("transportType"),
-        price: Number(formData.get("price")),
-        quantity: Number(formData.get("quantity")),
-        departureDate: formData.get("departureDate"),
-        departureTime: formData.get("departureTime"),
-        perks,
-        imageUrl,
+        ticketTitle: data.title,
+        from: data.from,
+        to: data.to,
+        transportType: data.transportType,
+        price: Number(data.price),
+        quantity: Number(data.quantity),
+        departureDate: data.departureDate,
+        departureTime: data.departureTime,
+        perks: data.perks || [],
+        image,
         vendorName: user?.displayName || "",
         vendorEmail: user?.email || "",
       };
-
-      // TODO: Replace with actual API call to your backend
-      console.log("Ticket payload", payload);
-      toast.success("Ticket added successfully!");
-      form.reset();
+      await addTicketMutation.mutateAsync(payload);
+      reset();
     } catch (err) {
       toast.error(err.message || "Failed to add ticket");
     } finally {
@@ -66,51 +75,73 @@ const AddTicket = () => {
     }
   };
 
+  const addTicketMutation = useMutation({
+    mutationFn: async (payload) => {
+      const res = await api.post("/api/v1/tickets", payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Ticket added successfully!");
+    },
+    onError: (error) => {
+      const message = error?.response?.data?.message || error?.message || "Failed to add ticket";
+      toast.error(message);
+    }
+  });
+
   return (
     <section>
       <h1 className="text-2xl font-semibold mb-4">Add Ticket</h1>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium mb-1">Ticket title</label>
-          <input name="title" type="text" required className="w-full border rounded px-3 py-2" placeholder="e.g., Dhaka to Chittagong" />
+          <input {...register("title", { required: true })} type="text" className="w-full border rounded px-3 py-2" placeholder="e.g., Dhaka to Chittagong" />
+          {errors.title && <span className="text-red-600 text-sm">Title is required</span>}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">From (Location)</label>
-          <input name="from" type="text" required className="w-full border rounded px-3 py-2" placeholder="Starting point" />
+          <input {...register("from", { required: true })} type="text" className="w-full border rounded px-3 py-2" placeholder="Starting point" />
+          {errors.from && <span className="text-red-600 text-sm">From location is required</span>}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">To (Location)</label>
-          <input name="to" type="text" required className="w-full border rounded px-3 py-2" placeholder="Destination" />
+          <input {...register("to", { required: true })} type="text" className="w-full border rounded px-3 py-2" placeholder="Destination" />
+          {errors.to && <span className="text-red-600 text-sm">To location is required</span>}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Transport type</label>
-          <select name="transportType" required className="w-full border rounded px-3 py-2">
+          <select {...register("transportType", { required: true })} className="w-full border rounded px-3 py-2">
             <option value="">Select type</option>
-            <option value="Bus">Bus</option>
-            <option value="Train">Train</option>
-            <option value="Air">Air</option>
-            <option value="Ship">Ship</option>
+            <option value="bus">Bus</option>
+            <option value="train">Train</option>
+            <option value="air">Air</option>
+            <option value="launch">Ship</option>
           </select>
+          {errors.transportType && <span className="text-red-600 text-sm">Transport type is required</span>}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Price (per unit)</label>
-          <input name="price" type="number" min="0" step="0.01" required className="w-full border rounded px-3 py-2" placeholder="0.00" />
+          <input {...register("price", { required: true, min: 0 })} type="number" min="0" step="0.01" className="w-full border rounded px-3 py-2" placeholder="0.00" />
+          {errors.price && <span className="text-red-600 text-sm">Valid price is required</span>}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Ticket quantity</label>
-          <input name="quantity" type="number" min="1" required className="w-full border rounded px-3 py-2" placeholder="e.g., 40" />
+          <input {...register("quantity", { required: true, min: 1 })} type="number" min="1" className="w-full border rounded px-3 py-2" placeholder="e.g., 40" />
+          {errors.quantity && <span className="text-red-600 text-sm">Quantity must be at least 1</span>}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Departure date</label>
-            <input name="departureDate" type="date" required className="w-full border rounded px-3 py-2" />
+            <input {...register("departureDate", { required: true })} type="date" className="w-full border rounded px-3 py-2" />
+            {errors.departureDate && <span className="text-red-600 text-sm">Departure date is required</span>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Departure time</label>
-            <input name="departureTime" type="time" required className="w-full border rounded px-3 py-2" />
+            <input {...register("departureTime", { required: true })} type="time" className="w-full border rounded px-3 py-2" />
+            {errors.departureTime && <span className="text-red-600 text-sm">Departure time is required</span>}
           </div>
         </div>
 
@@ -126,7 +157,7 @@ const AddTicket = () => {
               "Luggage",
             ].map((perk) => (
               <label key={perk} className="inline-flex items-center gap-2">
-                <input type="checkbox" name="perks" value={perk} />
+                <input type="checkbox" value={perk} {...register("perks")} />
                 <span>{perk}</span>
               </label>
             ))}
@@ -135,7 +166,8 @@ const AddTicket = () => {
 
         <div className="md:col-span-2">
           <label className="block text-sm font-medium mb-1">Image upload (imgbb)</label>
-          <input name="image" type="file" accept="image/*" required className="w-full border rounded px-3 py-2" />
+          <input {...register("image", { required: true })} type="file" accept="image/*" className="w-full border rounded px-3 py-2" />
+          {errors.image && <span className="text-red-600 text-sm">Image is required</span>}
         </div>
 
         <div>
