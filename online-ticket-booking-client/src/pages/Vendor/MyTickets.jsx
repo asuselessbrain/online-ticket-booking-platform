@@ -1,5 +1,6 @@
 import { use, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import api from "../../lib/axios";
 import { AuthContext } from "../../providers/AuthContext";
 import { toast } from "react-toastify";
@@ -72,8 +73,35 @@ const MyTickets = () => {
 
   const handleUpdate = (ticket) => {
     if (ticket?.verificationStatus === "rejected") return;
-    // TODO: navigate to update page or open modal
-    toast.info("Update flow not implemented yet.");
+    setEditing(ticket);
+  };
+
+  // Update modal state and form
+  const [editing, setEditing] = useState(null);
+  const { register, handleSubmit: submitUpdate, reset: resetUpdate } = useForm();
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      const res = await api.patch(`/api/v1/tickets/${id}`, payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Ticket updated");
+      setEditing(null);
+      resetUpdate();
+      queryClient.invalidateQueries({ queryKey: ["vendorTickets", vendorEmail] });
+    },
+    onError: (err) => {
+      const message = err?.response?.data?.message || err?.message || "Failed to update";
+      toast.error(message);
+    }
+  });
+
+  const onUpdateSubmit = (values) => {
+    if (!editing) return;
+    const id = editing._id || editing.id;
+    const payload = { vendorEmail, ...values };
+    updateMutation.mutate({ id, payload });
   };
 
   return (
@@ -187,6 +215,53 @@ const MyTickets = () => {
           <option value={12}>12</option>
         </select>
       </div>
+      {editing && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white w-full max-w-xl rounded shadow p-4">
+            <h3 className="text-xl font-semibold mb-3">Update Ticket</h3>
+            <form onSubmit={submitUpdate(onUpdateSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="md:col-span-2">
+                <label className="text-sm">Title</label>
+                <input className="border rounded px-3 py-2 w-full" defaultValue={editing.title || editing.ticketTitle} {...register("title")} />
+              </div>
+              <div>
+                <label className="text-sm">From</label>
+                <input className="border rounded px-3 py-2 w-full" defaultValue={editing.from} {...register("from")} />
+              </div>
+              <div>
+                <label className="text-sm">To</label>
+                <input className="border rounded px-3 py-2 w-full" defaultValue={editing.to} {...register("to")} />
+              </div>
+              <div>
+                <label className="text-sm">Transport Type</label>
+                <input className="border rounded px-3 py-2 w-full" defaultValue={editing.transportType} {...register("transportType")} />
+              </div>
+              <div>
+                <label className="text-sm">Price</label>
+                <input type="number" min="0" className="border rounded px-3 py-2 w-full" defaultValue={editing.price} {...register("price")} />
+              </div>
+              <div>
+                <label className="text-sm">Quantity</label>
+                <input type="number" min="0" className="border rounded px-3 py-2 w-full" defaultValue={editing.quantity} {...register("quantity")} />
+              </div>
+              <div>
+                <label className="text-sm">Departure Date</label>
+                <input type="date" className="border rounded px-3 py-2 w-full" defaultValue={editing.departureDate} {...register("departureDate")} />
+              </div>
+              <div>
+                <label className="text-sm">Departure Time</label>
+                <input type="time" className="border rounded px-3 py-2 w-full" defaultValue={editing.departureTime} {...register("departureTime")} />
+              </div>
+              <div className="md:col-span-2 flex items-center justify-end gap-2 mt-2">
+                <button type="button" onClick={() => setEditing(null)} className="px-3 py-2 border rounded">Cancel</button>
+                <button type="submit" disabled={updateMutation.isPending} className="px-3 py-2 rounded bg-[#01602a] text-white">
+                  {updateMutation.isPending ? "Saving..." : "Save changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

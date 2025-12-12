@@ -89,9 +89,28 @@ const myAddedTicket = async (
     };
 }
 
+const modifyTicketDetails = async (
+    ticketId: string,
+    updates: Partial<ITicket>,
+    vendorEmail?: string
+): Promise<ITicket | null> => {
+    const filter: Record<string, unknown> = { _id: ticketId };
+    if (vendorEmail) filter.vendorEmail = vendorEmail;
 
+    const updated = await TicketModel.findOneAndUpdate(filter, updates, {
+        new: true,
+        runValidators: true,
+    });
 
+    return updated as unknown as ITicket | null;
+}
+
+const deleteTicket = async() => {
+    
+}
+ 
 export const TicketService = {
     createTicketIntoDB,
     myAddedTicket,
+    modifyTicketDetails,
 };
