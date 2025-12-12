@@ -1,20 +1,24 @@
 export interface ITicket {
-  ticketTitle: string;
+    ticketTitle: string;
 
-  from: string;
-  to: string;
+    from: string;
+    to: string;
 
-  transportType: "bus" | "train" | "air" | "launch";
+    transportType: "bus" | "train" | "air" | "launch";
 
-  price: number;            
-  quantity: number;    
+    price: number;
+    quantity: number;
 
-  departureDateTime: Date;
+    verificationStatus: "pending" | "approved" | "rejected";
 
-  perks: string[];  
 
-  image: string;  
+    departureDate: string;
+    departureTime: string;
 
-  vendorName: string; 
-  vendorEmail: string;
+    perks: string[];
+
+    image: string;
+
+    vendorName: string;
+    vendorEmail: string;
 }

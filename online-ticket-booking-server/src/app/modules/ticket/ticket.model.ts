@@ -27,16 +27,23 @@ const TicketSchema = new Schema(
     price: {
       type: Number,
       required: [true, "Price is required"],
+      min: [0, "Price cannot be negative"],
     },
 
     quantity: {
       type: Number,
       required: [true, "Ticket quantity is required"],
+      min: [1, "At least 1 ticket is required"],
     },
 
-    departureDateTime: {
-      type: Date,
-      required: [true, "Departure date & time is required"],
+    departureDate: {
+      type: String, // "2025-12-12"
+      required: [true, "Departure date is required"],
+    },
+
+    departureTime: {
+      type: String, // "10:30"
+      required: [true, "Departure time is required"],
     },
 
     perks: {
@@ -47,6 +54,13 @@ const TicketSchema = new Schema(
     image: {
       type: String,
       required: [true, "Ticket image is required"],
+    },
+
+    verificationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+      required: true,
     },
 
     vendorName: {
