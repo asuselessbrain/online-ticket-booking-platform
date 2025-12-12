@@ -1,11 +1,17 @@
 import { createBrowserRouter } from "react-router";
 import MainLayout from "../Layouts/MainLayout";
+import VendorDashboard from "../Layouts/VendorDashboard";
 import Login from "../pages/Login/Login";
 import Registration from "../pages/Registration/Registration";
 import Home from "../pages/Home/Home";
 import AllTickets from "../pages/AllTickets/AllTickets";
 import About from "../pages/About/About";
 import Contact from "../pages/Contact/Contact";
+import Profile from "../pages/Vendor/Profile";
+import AddTicket from "../pages/Vendor/AddTicket";
+import MyTickets from "../pages/Vendor/MyTickets";
+import RequestedBookings from "../pages/Vendor/RequestedBookings";
+import RevenueOverview from "../pages/Vendor/RevenueOverview";
 
 const router = createBrowserRouter([
     {
@@ -36,6 +42,18 @@ const router = createBrowserRouter([
                 path: "/registration",
                 element: <Registration />
             }
+        ]
+    },
+    {
+        path: "/vendor",
+        element: <VendorDashboard />,
+        children: [
+            { index: true, element: <Profile /> },
+            { path: "profile", element: <Profile /> },
+            { path: "add-ticket", element: <AddTicket /> },
+            { path: "my-tickets", element: <MyTickets /> },
+            { path: "requested-bookings", element: <RequestedBookings /> },
+            { path: "revenue", element: <RevenueOverview /> }
         ]
     },
     {
