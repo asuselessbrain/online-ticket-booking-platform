@@ -59,9 +59,35 @@ const modifyTicketDetails = async (req: Request, res: Response) => {
     }
 }
 
+const deleteTicket = async (req: Request, res: Response) => {
+    const ticketId = req.params.id;
+    const vendorEmail = req.body.vendorEmail;
+
+    try {
+        const result = await TicketService.deleteTicket(ticketId as string, vendorEmail);
+        if (result.deleted) {
+            res.status(200).json({
+                success: true,
+                message: "Ticket deleted successfully",
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: result.reason || "Failed to delete ticket",
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete ticket",
+            error: error,
+        });
+    }
+}
 
 export const TicketController = {
     createTicket,
     myAddedTicket,
     modifyTicketDetails,
+    deleteTicket,
 };

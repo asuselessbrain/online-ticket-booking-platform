@@ -6,5 +6,6 @@ const router = express.Router();
 router.post('/', TicketController.createTicket)
 router.get('/:vendorEmail', TicketController.myAddedTicket)
 router.patch('/:id', TicketController.modifyTicketDetails)
+router.delete('/:id', TicketController.deleteTicket)
 
 export const TicketRoutes = router;

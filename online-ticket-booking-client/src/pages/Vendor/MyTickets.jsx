@@ -53,7 +53,7 @@ const MyTickets = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      const res = await api.delete(`/api/v1/tickets/${id}`);
+      const res = await api.delete(`/api/v1/tickets/${id}` , { data: { vendorEmail } });
       return res.data;
     },
     onSuccess: () => {

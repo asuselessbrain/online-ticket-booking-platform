@@ -105,12 +105,29 @@ const modifyTicketDetails = async (
     return updated as unknown as ITicket | null;
 }
 
-const deleteTicket = async() => {
-    
+const deleteTicket = async (
+    ticketId: string,
+    vendorEmail?: string
+): Promise<{ deleted: boolean; reason?: string }> => {
+    const filter: Record<string, unknown> = { _id: ticketId };
+    if (vendorEmail) filter.vendorEmail = vendorEmail;
+
+    const ticket = await TicketModel.findOne(filter);
+    if (!ticket) {
+        return { deleted: false, reason: "Ticket not found or not owned" };
+    }
+
+    if (ticket.verificationStatus === "rejected") {
+        return { deleted: false, reason: "Rejected tickets cannot be deleted" };
+    }
+
+    await TicketModel.deleteOne({ _id: ticket._id });
+    return { deleted: true };
 }
  
 export const TicketService = {
     createTicketIntoDB,
     myAddedTicket,
     modifyTicketDetails,
+    deleteTicket,
 };
