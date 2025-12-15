@@ -5,6 +5,7 @@ import GoogleLogin from "../../components/shared/GoogleLogin";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../providers/AuthContext";
+import api from "../../lib/axios";
 
 const Registration = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
@@ -41,12 +42,22 @@ const Registration = () => {
 
                 await updateUser(payload)
 
+                const userData = {
+                    name: data.name,
+                    email: data.email,
+                    password: data.password,
+                    imageUrl: photoURL
+                }
+
+                await api.post('/api/v1/users', userData)
+
                 toast.success("Registration successful!")
                 navigate("/")
             }
 
         } catch (error) {
-            toast.error(error.message.split("/")[1].split(")")[0])
+            console.log(error)
+            // toast.error(error.message.split("/")[1].split(")")[0])
         }
 
     }

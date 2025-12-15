@@ -8,7 +8,6 @@ const AdvertiseTickets = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
-  // Fetch admin-approved tickets
   const { data, isLoading, isError } = useQuery({
     queryKey: ["approvedTickets", { page, limit }],
     queryFn: async () => {
@@ -20,10 +19,9 @@ const AdvertiseTickets = () => {
     },
   });
 
-  // Mutation to toggle advertisement flag
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, advertise }) => {
-      const res = await api.patch(`/api/v1/tickets/advertisement/${id}`, { advertise });
+    mutationFn: async ({ id, isAdvertised }) => {
+      const res = await api.patch(`/api/v1/tickets/advertisement/${id}`, { isAdvertised });
       return res.data;
     },
     onSuccess: () => {
@@ -37,16 +35,12 @@ const AdvertiseTickets = () => {
   });
 
   const list = data?.data || [];
-  const totalAdvertised = list.filter((t) => t.isAdvertised).length;
 
-  const handleToggle = (ticket) => {
-    const next = !ticket.isAdvertised;
-    if (next && totalAdvertised >= 6) {
-      toast.warn("You can advertise at most 6 tickets");
-      return;
-    }
-    toggleMutation.mutate({ id: ticket._id || ticket.id, advertise: next });
+  const handleToggle = (e, ticket) => {
+    const updatedStatus = e.target.checked;
+    toggleMutation.mutate({ id: ticket._id || ticket.id, isAdvertised: updatedStatus });
   };
+
 
   const total = data?.meta?.total || 0;
 
@@ -92,21 +86,15 @@ const AdvertiseTickets = () => {
                   <label className="inline-flex items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={!!t.isAdvertised}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        if (checked && totalAdvertised >= 6 && !t.isAdvertised) {
-                          toast.warn("You can advertise at most 6 tickets");
-                          return;
-                        }
-                        toggleMutation.mutate({ id: t._id || t.id, advertise: checked });
-                      }}
-                      disabled={toggleMutation.isPending}
+                      name="advertised"
+                      checked={t.isAdvertised}
+                      onChange={(e) => handleToggle(e, t)}
                       className="accent-[#01602a] w-5 h-5"
                     />
                     <span>{t.isAdvertised ? "Advertised" : "Not Advertised"}</span>
                   </label>
                 </td>
+
               </tr>
             ))}
             {list.length === 0 && !isLoading && (

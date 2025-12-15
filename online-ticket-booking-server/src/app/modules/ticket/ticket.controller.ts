@@ -127,6 +127,8 @@ const addToAdvertisement = async (req: Request, res: Response) => {
     const ticketId = req.params.id;
     const { isAdvertised } = req.body;
 
+    console.log(isAdvertised)
+
     try {
         const result = await TicketService.addToAdvertisement(ticketId as string, isAdvertised);
         res.status(200).json({
