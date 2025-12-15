@@ -6,12 +6,12 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDrfYCM_B-WYiX7Rf8LZHNIDoSmt3RspLM",
-  authDomain: "online-ticket-system-d45dd.firebaseapp.com",
-  projectId: "online-ticket-system-d45dd",
-  storageBucket: "online-ticket-system-d45dd.firebasestorage.app",
-  messagingSenderId: "110374074758",
-  appId: "1:110374074758:web:ae6b6a24ccd02ee71f5407"
+  apiKey: import.meta.env.VITE_APIKEY,
+  authDomain: import.meta.env.VITE_AUTHDOMAIN,
+  projectId: import.meta.env.VITE_PROJECTID,
+  storageBucket: import.meta.env.VITE_STORAGEBUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGINGSENDERID,
+  appId: import.meta.env.VITE_APPID
 };
 
 // Initialize Firebase

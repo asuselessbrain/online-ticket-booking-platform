@@ -11,6 +11,8 @@ export interface ITicket {
 
     verificationStatus: "pending" | "approved" | "rejected";
 
+    isAdvertised: boolean;
+
 
     departureDate: string;
     departureTime: string;

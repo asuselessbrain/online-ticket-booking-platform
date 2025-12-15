@@ -63,6 +63,11 @@ const TicketSchema = new Schema(
       required: true,
     },
 
+    isAdvertised: {
+      type: Boolean,
+      default: false,
+    },
+
     vendorName: {
       type: String,
       required: [true, "Vendor name is required"],

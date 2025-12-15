@@ -18,7 +18,7 @@ type MyTicketsQuery = {
 const createTicketIntoDB = async (ticketData: ITicket): Promise<ITicket> => {
 
     const ticket = await TicketModel.create(ticketData);
-    
+
     return ticket;
 }
 
@@ -124,10 +124,94 @@ const deleteTicket = async (
     await TicketModel.deleteOne({ _id: ticket._id });
     return { deleted: true };
 }
- 
+
+const updateTicketStatus = async (
+    ticketId: string,
+    status: ITicket["verificationStatus"]
+): Promise<ITicket | null> => {
+    const updated = await TicketModel.findByIdAndUpdate(
+        ticketId,
+        { verificationStatus: status },
+        { new: true, runValidators: true }
+    );
+    return updated;
+}
+
+type GetAllTicketsQuery = MyTicketsQuery;
+
+const getAllTickets = async (
+    query: GetAllTicketsQuery = {}
+): Promise<{ data: ITicket[]; meta: { page: number; limit: number; total: number } }> => {
+    const {
+        page = 1,
+        limit = 10,
+        sort = "desc",
+        searchTerm,
+        transportType,
+        verificationStatus,
+        from,
+        to,
+        minPrice,
+        maxPrice,
+    } = query;
+
+    const filterAnd: Record<string, unknown>[] = [];
+
+    if (searchTerm && searchTerm.trim().length > 0) {
+        const regex = new RegExp(searchTerm, "i");
+        filterAnd.push({
+            $or: [
+                { ticketTitle: regex },
+                { from: regex },
+                { to: regex },
+                { transportType: regex },
+                { vendorName: regex },
+            ],
+        });
+    }
+
+    if (transportType) filterAnd.push({ transportType });
+    if (verificationStatus) filterAnd.push({ verificationStatus });
+    if (from) filterAnd.push({ from });
+    if (to) filterAnd.push({ to });
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+        const price: Record<string, number> = {};
+        if (minPrice !== undefined) price.$gte = minPrice;
+        if (maxPrice !== undefined) price.$lte = maxPrice;
+        filterAnd.push({ price });
+    }
+
+    const filters = filterAnd.length ? { $and: filterAnd } : {};
+    const sortStage: Record<string, "asc" | "desc"> = { createdAt: sort };
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+        TicketModel.find(filters).sort(sortStage).skip(skip).limit(limit),
+        TicketModel.countDocuments(filters),
+    ]);
+
+    return { data: data as unknown as ITicket[], meta: { page, limit, total } };
+}
+
+const addToAdvertisement = async (
+    ticketId: string,
+    isAdvertised: boolean
+): Promise<ITicket | null> => {
+    const updated = await TicketModel.findByIdAndUpdate(
+        ticketId,
+        { isAdvertised },
+        { new: true, runValidators: true }
+    );
+    return updated;
+}
+
 export const TicketService = {
     createTicketIntoDB,
     myAddedTicket,
     modifyTicketDetails,
     deleteTicket,
+    updateTicketStatus,
+    getAllTickets,
+    addToAdvertisement,
 };
