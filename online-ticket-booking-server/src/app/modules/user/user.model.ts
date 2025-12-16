@@ -1,5 +1,5 @@
 
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose';
 import { IUser, UserRole } from './user.type';
 
 
@@ -9,7 +9,8 @@ const UserSchema = new Schema<IUser>(
 		email: { type: String, required: true, unique: true, lowercase: true, trim: true },
 		password: { type: String, required: true },
 		role: { type: String, enum: Object.values(UserRole), default: UserRole.USER },
-		imageUrl: { type: String, default: '' },
+		imageUrl: { type: String, required: true },
+		isFraud: { type: Boolean, default: false },
 	},
 	{ timestamps: true }
 );

@@ -127,7 +127,6 @@ const addToAdvertisement = async (req: Request, res: Response) => {
     const ticketId = req.params.id;
     const { isAdvertised } = req.body;
 
-    console.log(isAdvertised)
 
     try {
         const result = await TicketService.addToAdvertisement(ticketId as string, isAdvertised);
@@ -145,6 +144,23 @@ const addToAdvertisement = async (req: Request, res: Response) => {
     }
 }
 
+const getApprovedTickets = async (req: Request, res: Response) => {
+    try {
+        const result = await TicketService.getApprovedTickets(req.query);
+        res.status(200).json({
+            success: true,
+            message: "Approved tickets retrieved successfully",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to retrieve approved tickets",
+            error: error,
+        });
+    }
+}
+
 export const TicketController = {
     createTicket,
     myAddedTicket,
@@ -153,4 +169,5 @@ export const TicketController = {
     updateTicketStatus,
     getAllTickets,
     addToAdvertisement,
+    getApprovedTickets
 };

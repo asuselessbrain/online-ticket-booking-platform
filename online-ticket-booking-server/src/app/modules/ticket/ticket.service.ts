@@ -206,6 +206,59 @@ const addToAdvertisement = async (
     return updated;
 }
 
+const getApprovedTickets = async (
+    query: GetAllTicketsQuery = {}
+): Promise<{ data: ITicket[]; meta: { page: number; limit: number; total: number } }> => {
+    const {
+        page = 1,
+        limit = 10,
+        sort = "desc",
+        searchTerm,
+        transportType,
+        from,
+        to,
+        minPrice,
+        maxPrice,
+    } = query;
+
+    const filterAnd: Record<string, unknown>[] = [{ verificationStatus: 'approved' }];
+
+    if (searchTerm && searchTerm.trim().length > 0) {
+        const regex = new RegExp(searchTerm, "i");
+        filterAnd.push({
+            $or: [
+                { ticketTitle: regex },
+                { from: regex },
+                { to: regex },
+                { transportType: regex },
+                { vendorName: regex },
+            ],
+        });
+    }
+
+    if (transportType) filterAnd.push({ transportType });
+    if (from) filterAnd.push({ from });
+    if (to) filterAnd.push({ to });
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+        const price: Record<string, number> = {};
+        if (minPrice !== undefined) price.$gte = minPrice;
+        if (maxPrice !== undefined) price.$lte = maxPrice;
+        filterAnd.push({ price });
+    }
+
+    const filters = { $and: filterAnd };
+    const sortStage: Record<string, "asc" | "desc"> = { createdAt: sort };
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+        TicketModel.find(filters).sort(sortStage).skip(skip).limit(limit),
+        TicketModel.countDocuments(filters),
+    ]);
+
+    return { data: data as unknown as ITicket[], meta: { page, limit, total } };
+}
+
 export const TicketService = {
     createTicketIntoDB,
     myAddedTicket,
@@ -214,4 +267,5 @@ export const TicketService = {
     updateTicketStatus,
     getAllTickets,
     addToAdvertisement,
+    getApprovedTickets
 };

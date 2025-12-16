@@ -58,8 +58,16 @@ const ManageTickets = () => {
     },
   });
 
-  const handleToggleVerification = (t, checked) => {
-    statusMutation.mutate({ id: t._id || t.id, verificationStatus: checked });
+  const handleApprove = (ticket) => {
+    if (window.confirm(`Approve ticket "${ticket.ticketTitle || ticket.title}"?`)) {
+      statusMutation.mutate({ id: ticket._id || ticket.id, verificationStatus: "approved" });
+    }
+  };
+
+  const handleReject = (ticket) => {
+    if (window.confirm(`Reject ticket "${ticket.ticketTitle || ticket.title}"?`)) {
+      statusMutation.mutate({ id: ticket._id || ticket.id, verificationStatus: "rejected" });
+    }
   };
 
   const total = data?.meta?.total || 0;
@@ -154,7 +162,7 @@ const ManageTickets = () => {
               <th className="p-3">Departure</th>
               <th className="p-3">Vendor</th>
               <th className="p-3">Status</th>
-              <th className="p-3">Verify</th>
+              <th className="p-3">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -188,16 +196,22 @@ const ManageTickets = () => {
                     </span>
                   </td>
                   <td className="p-3">
-                    <label className="inline-flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={!!t.verificationStatus}
-                        onChange={(e) => handleToggleVerification(t, e.target.checked)}
-                        disabled={statusMutation.isPending}
-                        className="accent-[#01602a] w-5 h-5"
-                      />
-                      <span>{!!t.verificationStatus ? "Verified" : "Unverified"}</span>
-                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={() => handleApprove(t)}
+                        disabled={statusMutation.isPending || status === "approved" || status === "rejected"}
+                        className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(t)}
+                        disabled={statusMutation.isPending || status === "approved" || status === "rejected"}
+                        className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

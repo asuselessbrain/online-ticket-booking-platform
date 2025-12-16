@@ -7,12 +7,30 @@ const AdvertiseTickets = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [sort, setSort] = useState("desc");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [transportType, setTransportType] = useState("");
+  const [fromLoc, setFromLoc] = useState("");
+  const [toLoc, setToLoc] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["approvedTickets", { page, limit }],
+    queryKey: ["approvedTickets", { page, limit, sort, searchTerm, transportType, fromLoc, toLoc, minPrice, maxPrice }],
     queryFn: async () => {
       const res = await api.get("/api/v1/tickets", {
-        params: { page, limit, verificationStatus: "approved" },
+        params: { 
+          page, 
+          limit, 
+          verificationStatus: "approved",
+          sort,
+          searchTerm: searchTerm || undefined,
+          transportType: transportType || undefined,
+          from: fromLoc || undefined,
+          to: toLoc || undefined,
+          minPrice: minPrice !== "" ? Number(minPrice) : undefined,
+          maxPrice: maxPrice !== "" ? Number(maxPrice) : undefined,
+        },
       });
       const payload = res.data?.data;
       return payload || { data: [], meta: { page: 1, limit, total: 0 } };
@@ -47,6 +65,82 @@ const AdvertiseTickets = () => {
   return (
     <section>
       <h1 className="text-2xl font-semibold mb-4">Advertise Tickets</h1>
+
+      {/* Filters */}
+      <div className="space-y-3 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <input
+            className="border rounded px-3 py-2"
+            placeholder="Search title, route, type, vendor"
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+          />
+          <select
+            className="border rounded px-3 py-2"
+            value={transportType}
+            onChange={(e) => { setTransportType(e.target.value); setPage(1); }}
+          >
+            <option value="">All transport</option>
+            <option value="bus">Bus</option>
+            <option value="train">Train</option>
+            <option value="air">Air</option>
+            <option value="ship">Ship</option>
+          </select>
+          <select
+            className="border rounded px-3 py-2"
+            value={sort}
+            onChange={(e) => { setSort(e.target.value); setPage(1); }}
+          >
+            <option value="desc">Newest first</option>
+            <option value="asc">Oldest first</option>
+          </select>
+          <button
+            className="border rounded px-3 py-2 bg-gray-100 hover:bg-gray-200"
+            onClick={() => {
+              setSearchTerm("");
+              setTransportType("");
+              setFromLoc("");
+              setToLoc("");
+              setMinPrice("");
+              setMaxPrice("");
+              setSort("desc");
+              setPage(1);
+            }}
+          >
+            Clear Filters
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <input
+            className="border rounded px-3 py-2"
+            placeholder="From"
+            value={fromLoc}
+            onChange={(e) => { setFromLoc(e.target.value); setPage(1); }}
+          />
+          <input
+            className="border rounded px-3 py-2"
+            placeholder="To"
+            value={toLoc}
+            onChange={(e) => { setToLoc(e.target.value); setPage(1); }}
+          />
+          <input
+            type="number"
+            min="0"
+            className="border rounded px-3 py-2"
+            placeholder="Min price"
+            value={minPrice}
+            onChange={(e) => { setMinPrice(e.target.value); setPage(1); }}
+          />
+          <input
+            type="number"
+            min="0"
+            className="border rounded px-3 py-2"
+            placeholder="Max price"
+            value={maxPrice}
+            onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
+          />
+        </div>
+      </div>
 
       {isLoading && (
         <div className="flex items-center gap-2 text-gray-600">

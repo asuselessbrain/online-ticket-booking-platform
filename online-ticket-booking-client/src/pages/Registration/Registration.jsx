@@ -21,7 +21,7 @@ const Registration = () => {
         }
         const formData = new FormData();
 
-        formData.append('file', data.profilePicture)
+        formData.append('file', data.profilePicture[0])
         formData.append('upload_preset', "my_preset")
 
 
@@ -32,8 +32,10 @@ const Registration = () => {
                     method: "POST",
                     body: formData
                 })
-                const data = await imgRes.json()
-                const photoURL = data.secure_url
+                const imgData = await imgRes.json()
+                const photoURL = imgData.secure_url
+
+                console.log(photoURL)
 
                 const payload = {
                     displayName: data.name,
@@ -49,7 +51,8 @@ const Registration = () => {
                     imageUrl: photoURL
                 }
 
-                await api.post('/api/v1/users', userData)
+                const result = await api.post('/api/v1/users', userData)
+                console.log(result)
 
                 toast.success("Registration successful!")
                 navigate("/")

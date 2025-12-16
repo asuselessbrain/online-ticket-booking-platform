@@ -1,33 +1,19 @@
+// frontend/src/api.js
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL;
+const baseURL = "http://localhost:5000"; // backend URL
 
-export const api = axios.create({ baseURL, withCredentials: true });
+export const api = axios.create({
+  baseURL,
+  withCredentials: true, // allow cookies to be sent/received
+});
 
-const getCookie = (name) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-  return undefined;
-};
-
-api.interceptors.request.use(
-  (config) => {
-    const token = getCookie("accessToken");
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
+// Optional: centralized error handling
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Centralize error handling if needed
-    return Promise.reject(error);
+  (res) => res,
+  (err) => {
+    console.log("API Error:", err.response?.data);
+    return Promise.reject(err);
   }
 );
 

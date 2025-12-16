@@ -3,6 +3,7 @@ import { FcGoogle } from "react-icons/fc";
 import { AuthContext } from "../../providers/AuthContext";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
+import api from "../../lib/axios";
 
 const GoogleLogin = () => {
     const { loginWithGoogle } = use(AuthContext)
@@ -11,11 +12,39 @@ const GoogleLogin = () => {
         try {
             const res = await loginWithGoogle()
             if(res.user){
-                toast.success("Registration successful!")
-                navigate("/")
+                // Check if user exists in backend, if not create account
+                try {
+                    // Try to login first (user might already exist)
+                    const loginResult = await api.post('/api/v1/users/login', {
+                        email: res.user.email,
+                        password: res.user.uid // Use Firebase UID as password for Google users
+                    });
+                    
+                    if (loginResult.data.success) {
+                        toast.success("Login successful!");
+                        navigate("/");
+                    }
+                // eslint-disable-next-line no-unused-vars
+                } catch (loginError) {
+                    // If login fails, create new account
+                    const userData = {
+                        name: res.user.displayName,
+                        email: res.user.email,
+                        password: res.user.uid, // Use Firebase UID as password
+                        imageUrl: res.user.photoURL || 'https://via.placeholder.com/150'
+                    };
+                    
+                    const signupResult = await api.post('/api/v1/users', userData);
+                    
+                    if (signupResult.data.success) {
+                        toast.success("Account created successfully!");
+                        navigate("/");
+                    }
+                }
             }
         } catch (error) {
-            toast.error(error.message.split("/")[1].split(")")[0])
+            console.error(error);
+            toast.error(error.response?.data?.message || "Authentication failed");
         }
     }
     return (

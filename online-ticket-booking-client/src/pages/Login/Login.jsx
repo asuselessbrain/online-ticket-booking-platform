@@ -1,15 +1,43 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 import GoogleLogin from "../../components/shared/GoogleLogin";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { AuthContext } from "../../providers/AuthContext";
+import { toast } from "react-toastify";
+import api from "../../lib/axios";
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
-    const { register, handleSubmit, formState: { errors } } = useForm()
+    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { loginWithEmail } = use(AuthContext);
+    const navigate = useNavigate();
 
-    const handleLogin = (data) => {
-        console.log(data);
+    const handleLogin = async (data) => {
+        try {
+            // First authenticate with Firebase
+            const firebaseResult = await loginWithEmail(data.email, data.password);
+            
+            if (firebaseResult.user) {
+                // Then send credentials to backend to get cookie token
+                const backendResult = await api.post('/api/v1/users/login', {
+                    email: data.email,
+                    password: data.password
+                });
+
+                console.log(backendResult)
+
+                if (backendResult.data.success) {
+                    toast.success("Login successful!");
+                    navigate("/");
+                }
+            }
+
+            
+        } catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || "Login failed");
+        }
     }
 
     return (

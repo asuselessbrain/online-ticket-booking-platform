@@ -17,6 +17,8 @@ import AdminProfile from "../pages/Admin/Profile";
 import ManageTickets from "../pages/Admin/ManageTickets";
 import ManageUsers from "../pages/Admin/ManageUsers";
 import AdvertiseTickets from "../pages/Admin/AdvertiseTickets";
+import PrivateRoute from "./PrivateRoute";
+import AdminRoute from "./AdminRoute";
 
 const router = createBrowserRouter([
     {
@@ -51,7 +53,11 @@ const router = createBrowserRouter([
     },
     {
         path: "/admin",
-        element: <AdminDashboard />,
+        element: <PrivateRoute>
+            <AdminRoute>
+                <AdminDashboard />
+            </AdminRoute>
+        </PrivateRoute>,
         children: [
             { index: true, element: <AdminProfile /> },
             { path: "profile", element: <AdminProfile /> },
