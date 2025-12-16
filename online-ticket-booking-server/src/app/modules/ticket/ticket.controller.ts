@@ -161,6 +161,32 @@ const getApprovedTickets = async (req: Request, res: Response) => {
     }
 }
 
+const getSingleTicket = async (req: Request, res: Response) => {
+    try {
+        const ticketId = req.params.id;
+        const result = await TicketService.getSingleTicket(ticketId as string);
+        
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                message: "Ticket not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Ticket retrieved successfully",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to retrieve ticket",
+            error: error,
+        });
+    }
+}
+
 export const TicketController = {
     createTicket,
     myAddedTicket,
@@ -169,5 +195,6 @@ export const TicketController = {
     updateTicketStatus,
     getAllTickets,
     addToAdvertisement,
-    getApprovedTickets
+    getApprovedTickets,
+    getSingleTicket
 };

@@ -259,6 +259,11 @@ const getApprovedTickets = async (
     return { data: data as unknown as ITicket[], meta: { page, limit, total } };
 }
 
+const getSingleTicket = async (ticketId: string): Promise<ITicket | null> => {
+    const ticket = await TicketModel.findById(ticketId);
+    return ticket as unknown as ITicket | null;
+}
+
 export const TicketService = {
     createTicketIntoDB,
     myAddedTicket,
@@ -267,5 +272,6 @@ export const TicketService = {
     updateTicketStatus,
     getAllTickets,
     addToAdvertisement,
-    getApprovedTickets
+    getApprovedTickets,
+    getSingleTicket
 };

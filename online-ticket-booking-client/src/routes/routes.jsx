@@ -19,6 +19,7 @@ import ManageUsers from "../pages/Admin/ManageUsers";
 import AdvertiseTickets from "../pages/Admin/AdvertiseTickets";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
+import TicketDetails from "../pages/TicketDetails/TicketDetails";
 
 const router = createBrowserRouter([
     {
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
             {
                 path: "/tickets",
                 element: <AllTickets />
+            },
+            {
+                path: "/tickets/:id",
+                element: <TicketDetails />
             },
             {
                 path: "/about",

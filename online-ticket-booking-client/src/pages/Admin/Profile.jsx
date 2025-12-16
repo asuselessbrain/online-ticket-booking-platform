@@ -169,7 +169,7 @@ const Profile = () => {
         {/* Profile Card */}
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-[#01602a] to-[#028a3d] h-32"></div>
+          <div className="bg-linear-to-r from-[#01602a] to-[#028a3d] h-32"></div>
 
           <div className="px-6 pb-6">
             {/* Profile Image */}
