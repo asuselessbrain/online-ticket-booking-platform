@@ -20,6 +20,10 @@ import AdvertiseTickets from "../pages/Admin/AdvertiseTickets";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 import TicketDetails from "../pages/TicketDetails/TicketDetails";
+import MyBookings from "../pages/User/MyBookings";
+import UserDashboard from "../Layouts/UserDashboard";
+import UserProfile from "../pages/User/Profile";
+import TransactionHistory from "../pages/User/TransactionHistory";
 
 const router = createBrowserRouter([
     {
@@ -54,6 +58,18 @@ const router = createBrowserRouter([
                 path: "/registration",
                 element: <Registration />
             }
+        ]
+    },
+    {
+        path: "/user",
+        element: <PrivateRoute>
+            <UserDashboard />
+        </PrivateRoute>,
+        children: [
+            { index: true, element: <UserProfile /> },
+            { path: "profile", element: <UserProfile /> },
+            { path: "my-bookings", element: <MyBookings /> },
+            { path: "transactions", element: <TransactionHistory /> },
         ]
     },
     {

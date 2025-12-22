@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { BookingService } from './booking.service';
+import { getVendorBookings } from './booking.service';
 
 const createBooking = async (req: Request, res: Response) => {
   try {
@@ -22,12 +23,13 @@ const createBooking = async (req: Request, res: Response) => {
 const getUserBookings = async (req: Request, res: Response) => {
   try {
     const userEmail = req.params.email;
-    const bookings = await BookingService.getUserBookings(userEmail as string);
+    const result = await BookingService.getUserBookingsWithMeta(userEmail as string, req.query as any);
 
     res.status(200).json({
       success: true,
       message: 'Bookings fetched successfully',
-      data: bookings,
+      meta: result.meta,
+      data: result.data,
     });
   } catch (error) {
     res.status(400).json({
@@ -61,4 +63,14 @@ export const BookingController = {
   createBooking,
   getUserBookings,
   updateBookingStatus,
+};
+
+export const getBookingsForVendor = async (req: Request, res: Response) => {
+  try {
+    const vendorEmail = req.params.email;
+    const result = await getVendorBookings(vendorEmail as string, req.query as any);
+    res.status(200).json({ success: true, message: 'Vendor bookings fetched successfully', ...result });
+  } catch (error) {
+    res.status(400).json({ success: false, message: (error as Error).message });
+  }
 };

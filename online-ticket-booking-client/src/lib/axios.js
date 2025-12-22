@@ -1,7 +1,7 @@
 // frontend/src/api.js
 import axios from "axios";
 
-const baseURL = "http://localhost:5000"; // backend URL
+const baseURL = "https://drivex-server.vercel.app";
 
 export const api = axios.create({
   baseURL,

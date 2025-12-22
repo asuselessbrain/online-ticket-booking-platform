@@ -4,29 +4,27 @@ import { use, useState } from "react";
 import { IoMenu } from "react-icons/io5";
 import { AuthContext } from "../../providers/AuthContext";
 import { toast } from "react-toastify";
+import useRole from "../../lib/userRole";
 
 const NavBar = () => {
-    const navLinks = [
-        {
-            name: 'Home',
-            link: '/'
-        },
-        {
-            name: 'All Tickets',
-            link: '/tickets'
-        },
-        {
-            name: 'About',
-            link: '/about'
-        },
-        {
-            name: 'Contact',
-            link: '/contact'
-        }
-    ]
+    const baseLinks = [
+        { name: 'Home', link: '/' },
+        { name: 'All Tickets', link: '/tickets' },
+        { name: 'About', link: '/about' },
+        { name: 'Contact', link: '/contact' }
+    ];
+
 
     const [isOpen, setIsOpen] = useState(false);
     const { user, logout } = use(AuthContext)
+    const { role, roleLoading } = useRole()
+
+    if (roleLoading) {
+        return <p>Loading....</p>
+    }
+
+    const navLinks = user ? [...baseLinks, { name: 'Dashboard', link: `/${role}` }] : baseLinks;
+
 
     const handelLogout = async () => {
         try {

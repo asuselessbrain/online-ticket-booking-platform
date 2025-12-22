@@ -30,7 +30,7 @@ const MyTickets = () => {
     ],
     queryFn: async () => {
       if (!vendorEmail) return { data: [], meta: { page: 1, limit: 0, total: 0 } };
-      const res = await api.get(`/api/v1/tickets/${vendorEmail}`, {
+      const res = await api.get(`/api/v1/tickets/vendor/${vendorEmail}`, {
         params: {
           page,
           limit,
