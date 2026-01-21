@@ -6,8 +6,9 @@ import { AuthContext } from '../providers/AuthContext';
 const useRole = () => {
     const { user } = use(AuthContext);
 
-    const { isLoading: roleLoading, data: role = 'user' } = useQuery({
+    const { data: role, isLoading: roleLoading } = useQuery({
         queryKey: ['user-role', user?.email],
+        enabled: !!user?.email,
         queryFn: async () => {
             const res = await api.get(`/api/v1/users/role/${user.email}`);
 
