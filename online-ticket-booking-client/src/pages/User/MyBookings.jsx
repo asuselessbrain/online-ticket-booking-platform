@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthContext } from "../../providers/AuthContext";
 import api from "../../lib/axios";
 import { toast } from "react-toastify";
+import { ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown } from "lucide-react";
+import Loading from "../../components/shared/Loading";
 
 const normalizeStatus = (status) => {
   if (!status) return "pending";
@@ -47,19 +49,38 @@ const buildCountdown = (departureDate, departureTime, nowTs) => {
 const MyBookings = () => {
   const { user } = use(AuthContext);
   const [nowTs, setNowTs] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(9);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   useLayoutEffect(() => {
-    setNowTs(Date.now());
     const id = setInterval(() => setNowTs(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
   const { data, isLoading, isError, error } = useQuery({
     enabled: !!user?.email,
-    queryKey: ["myBookings", user?.email],
+    queryKey: ["myBookings", user?.email, page, limit, searchTerm, filterStatus, sortBy, sortOrder],
     queryFn: async () => {
-      const res = await api.get(`/api/v1/bookings/user/${user.email}`);
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+      });
+
+      if (searchTerm) params.append("searchTerm", searchTerm);
+      if (filterStatus) params.append("status", filterStatus);
+      if (sortBy) params.append("sortBy", sortBy);
+      if (sortOrder) params.append("sortOrder", sortOrder);
+
+      const res = await api.get(
+        `/api/v1/bookings/user/${user.email}?${params.toString()}`
+      );
+      
       const bookings = res.data?.data || [];
+      const meta = res.data?.meta || { total: 0, page, limit };
 
       const enriched = await Promise.all(
         bookings.map(async (booking) => {
@@ -73,14 +94,14 @@ const MyBookings = () => {
         })
       );
 
-      return enriched;
+      return { bookings: enriched, meta };
     },
   });
 
   const items = useMemo(() => {
-    if (!data) return [];
+    if (!data?.bookings) return [];
 
-    return data.map(({ booking, ticket }) => {
+    return data.bookings.map(({ booking, ticket }) => {
       const status = normalizeStatus(booking.status);
       const countdown = ticket
         ? buildCountdown(ticket.departureDate, ticket.departureTime, nowTs)
@@ -103,15 +124,25 @@ const MyBookings = () => {
     });
   }, [data, nowTs]);
 
-  const handlePayNow = async (bookingId) => {
+  const handlePayNow = async ({ bookingId, isExpired, status }) => {
+    if (isExpired) {
+      toast.error("Payment unavailable: departure time has passed.");
+      return;
+    }
+
+    if (status !== "accepted") {
+      toast.error("Payment is allowed only after the vendor accepts your booking.");
+      return;
+    }
+
     try {
       const res = await api.post("/api/v1/payments/create-checkout-session", { bookingId });
-      const url = res.data?.url;
+      const url = res.data?.data?.url;
 
       if (url) {
         window.location.replace(url);
       } else {
-        toast.info("Payment session created, but no checkout URL returned.");
+        toast.error("Payment session created, but no checkout URL returned.");
       }
     } catch (err) {
       toast.error(err?.response?.data?.message || "Unable to start payment. Please try again.");
@@ -136,11 +167,7 @@ const MyBookings = () => {
   }
 
   if (isLoading) {
-    return (
-      <div className="max-w-[1440px] mx-auto px-4 py-16">
-        <div className="flex items-center justify-center text-gray-600">Loading your bookings...</div>
-      </div>
-    );
+    return <Loading fullPage message="Loading your bookings..." />;
   }
 
   if (isError) {
@@ -165,8 +192,8 @@ const MyBookings = () => {
     return (
       <div className="max-w-[1440px] mx-auto px-4 py-16">
         <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">No bookings yet</h1>
-          <p className="text-gray-600 mb-6">When you book tickets, they will appear here.</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">No bookings found</h1>
+          <p className="text-gray-600 mb-6">Try adjusting your search or filters.</p>
           <Link
             to="/tickets"
             className="inline-block px-5 py-3 bg-[#01602a] text-white rounded-lg hover:bg-[#014d21] transition"
@@ -186,8 +213,111 @@ const MyBookings = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Your journeys at a glance</h1>
         </div>
         <div className="bg-gray-50 px-4 py-3 rounded-xl text-sm text-gray-700 border border-gray-100">
-          {items.length} booking{items.length !== 1 ? "s" : ""}
+          {data?.meta?.total || 0} booking{(data?.meta?.total || 0) !== 1 ? "s" : ""}
         </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 space-y-4">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search bookings by ticket name..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#01602a] focus:border-transparent"
+          />
+        </div>
+
+        {/* Filters and Sort */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#01602a] focus:border-transparent"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Accepted</option>
+              <option value="paid">Paid</option>
+              <option value="cancelled">Rejected</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Sort By</label>
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#01602a] focus:border-transparent"
+            >
+              <option value="createdAt">Date Booked</option>
+              <option value="total">Total Price</option>
+              <option value="quantity">Quantity</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Order</label>
+            <button
+              onClick={() => {
+                setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#01602a] focus:border-transparent flex items-center justify-between gap-2"
+            >
+              {sortOrder === "desc" ? "Newest" : "Oldest"}
+              <ArrowUpDown className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Active Filters */}
+        {(searchTerm || filterStatus) && (
+          <div className="flex flex-wrap gap-2 pt-2">
+            {searchTerm && (
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm border border-blue-200">
+                Search: {searchTerm}
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setPage(1);
+                  }}
+                  className="ml-1 hover:text-blue-900 font-semibold"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filterStatus && (
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm border border-green-200">
+                Status: {filterStatus}
+                <button
+                  onClick={() => {
+                    setFilterStatus("");
+                    setPage(1);
+                  }}
+                  className="ml-1 hover:text-green-900 font-semibold"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -245,8 +375,8 @@ const MyBookings = () => {
                   </div>
                   <div className="bg-gray-50 rounded-xl p-3">
                     <div className="text-xs text-gray-500">Total</div>
-                    <div className="text-lg font-bold text-gray-900">${(booking.totalPrice || 0).toFixed(2)}</div>
-                    <div className="text-xs text-gray-600">${unitPrice.toFixed(2)} per seat</div>
+                    <div className="text-lg font-bold text-gray-900">BDT {(booking.totalPrice || 0).toFixed(2)}</div>
+                    <div className="text-xs text-gray-600">BDT {unitPrice.toFixed(2)} per seat</div>
                   </div>
                 </div>
 
@@ -272,7 +402,7 @@ const MyBookings = () => {
                     {canPay ? (
                       <button
                         type="button"
-                        onClick={() => handlePayNow(booking._id)}
+                        onClick={() => handlePayNow({ bookingId: booking._id, isExpired, status })}
                         className="flex-1 px-4 py-2 bg-[#01602a] text-white rounded-lg text-sm font-semibold hover:bg-[#014d21] transition"
                       >
                         Pay Now
@@ -292,6 +422,22 @@ const MyBookings = () => {
             </article>
           );
         })}
+      </div>
+
+      <div className="flex items-center justify-between mt-10">
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-1 border rounded" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Prev</button>
+          <span>Page {page}</span>
+          <button className="px-3 py-1 border rounded" onClick={() => setPage((p) => p + 1)}
+            disabled={(page * limit) >= (data?.meta?.total || 0)}>Next</button>
+        </div>
+        <select className="border rounded px-2 py-1" value={limit}
+          onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}>
+          <option value={3}>3</option>
+          <option value={6}>6</option>
+          <option value={9}>9</option>
+          <option value={12}>12</option>
+        </select>
       </div>
     </section>
   );

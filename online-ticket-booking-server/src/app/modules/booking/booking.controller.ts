@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { BookingService } from './booking.service';
-import { getVendorBookings } from './booking.service';
+import { getVendorBookings, getVendorRevenue } from './booking.service';
 
 const createBooking = async (req: Request, res: Response) => {
   try {
@@ -39,6 +39,36 @@ const getUserBookings = async (req: Request, res: Response) => {
   }
 };
 
+const getUserTransactions = async (req: Request, res: Response) => {
+  try {
+    const userEmail = req.params.email;
+    const result = await BookingService.getUserTransactions(userEmail as string, req.query as any);
+
+    res.status(200).json({
+      success: true,
+      message: 'Transactions fetched successfully',
+      meta: result.meta,
+      data: result.data,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: (error as Error).message,
+    });
+  }
+};
+
+export const getVendorRevenueSummary = async (req: Request, res: Response) => {
+  try {
+    const vendorEmail = req.params.email;
+    const data = await getVendorRevenue(vendorEmail as string);
+
+    res.status(200).json({ success: true, message: 'Revenue summary fetched successfully', data });
+  } catch (error) {
+    res.status(400).json({ success: false, message: (error as Error).message });
+  }
+};
+
 const updateBookingStatus = async (req: Request, res: Response) => {
   try {
     const bookingId = req.params.id;
@@ -63,6 +93,7 @@ export const BookingController = {
   createBooking,
   getUserBookings,
   updateBookingStatus,
+  getUserTransactions,
 };
 
 export const getBookingsForVendor = async (req: Request, res: Response) => {

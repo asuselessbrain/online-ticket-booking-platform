@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "../../lib/axios";
 import { AuthContext } from "../../providers/AuthContext";
 import { toast } from "react-toastify";
+import Loading from "../../components/shared/Loading";
 
 const statusPill = (status) => {
   const map = {
@@ -125,9 +126,7 @@ const RequestedBookings = () => {
         </div>
       </div>
 
-      {isLoading && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 text-gray-600">Loading...</div>
-      )}
+      {isLoading && <Loading message="Loading booking requests..." fullPage={false} />}
 
       {isError && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 text-rose-600">

@@ -10,22 +10,18 @@ import api from "../../lib/axios";
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const { register, handleSubmit, formState: { errors } } = useForm();
-    const { loginWithEmail } = use(AuthContext);
+    const { loginWithEmail, logout } = use(AuthContext);
     const navigate = useNavigate();
 
     const handleLogin = async (data) => {
         try {
-            // First authenticate with Firebase
             const firebaseResult = await loginWithEmail(data.email, data.password);
             
             if (firebaseResult.user) {
-                // Then send credentials to backend to get cookie token
                 const backendResult = await api.post('/api/v1/users/login', {
                     email: data.email,
                     password: data.password
                 });
-
-                console.log(backendResult)
 
                 if (backendResult.data.success) {
                     toast.success("Login successful!");
@@ -35,7 +31,7 @@ const Login = () => {
 
             
         } catch (error) {
-            console.error(error);
+            await logout();
             toast.error(error.response?.data?.message || "Login failed");
         }
     }

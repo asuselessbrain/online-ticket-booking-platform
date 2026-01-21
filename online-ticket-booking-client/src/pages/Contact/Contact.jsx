@@ -8,8 +8,7 @@ const Contact = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // TODO: wire to backend endpoint (e.g., POST /api/contact)
-        console.log('Contact form submit', form);
+        // console.log('Contact form submit', form);
         setStatus('Thanks — we received your message and will reply shortly.');
         setForm({ name: '', email: '', subject: '', message: '' });
     };

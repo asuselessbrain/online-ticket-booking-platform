@@ -40,17 +40,17 @@ const Icon = ({ name }) => {
 
 const WhyChooseUs = () => {
   return (
-    <section aria-labelledby="why-heading" className="py-12 px-4">
+    <section aria-labelledby="why-heading" className="bg-linear-to-r from-[#01602a] to-[#014d21] py-16 px-4">
       <div className="max-w-[1440px] mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 id="why-heading" className="text-2xl font-extrabold text-slate-900">Why Choose Us?</h2>
-          <p className="text-sm text-slate-500">We make travel simple, safe and affordable</p>
+          <h2 id="why-heading" className="text-2xl font-extrabold text-white">Why Choose Us?</h2>
+          <p className="text-sm text-white/80">We make travel simple, safe and affordable</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map(f => (
-            <div key={f.id} className="bg-white rounded-lg shadow-sm p-5 flex flex-col gap-3 items-start">
-              <div className="p-3 bg-slate-50 rounded-md">
+            <div key={f.id} className="bg-white rounded-lg shadow-sm p-5 flex flex-col gap-3 items-start hover:-translate-y-2 hover:shadow-lg transition duration-300 cursor-pointer">
+              <div className="p-3 bg-slate-50 rounded-md group-hover:bg-[#e7f7ee] transition">
                 <Icon name={f.icon} />
               </div>
               <h3 className="text-lg font-semibold text-slate-900">{f.title}</h3>

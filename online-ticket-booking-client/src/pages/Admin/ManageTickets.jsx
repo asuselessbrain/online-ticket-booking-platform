@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../lib/axios";
 import { toast } from "react-toastify";
+import Loading from "../../components/shared/Loading";
 
 const ManageTickets = () => {
   const queryClient = useQueryClient();
@@ -147,7 +148,7 @@ const ManageTickets = () => {
         </div>
       </div>
 
-      {isLoading && <p>Loading...</p>}
+      {isLoading && <Loading message="Loading tickets..." fullPage={false} />}
       {isError && <p className="text-red-600">Failed to load tickets.</p>}
 
       <div className="overflow-x-auto border rounded">

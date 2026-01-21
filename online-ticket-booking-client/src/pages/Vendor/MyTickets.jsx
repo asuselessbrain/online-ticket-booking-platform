@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import api from "../../lib/axios";
 import { AuthContext } from "../../providers/AuthContext";
 import { toast } from "react-toastify";
+import Loading from "../../components/shared/Loading";
 
 const MyTickets = () => {
   const { user } = use(AuthContext);
@@ -49,7 +50,6 @@ const MyTickets = () => {
     },
     enabled: !!vendorEmail,
   });
-  console.log(data)
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
@@ -107,7 +107,7 @@ const MyTickets = () => {
   return (
     <section>
       <h1 className="text-2xl font-semibold mb-4">My Added Tickets</h1>
-      {isLoading && <p>Loading tickets...</p>}
+      {isLoading && <Loading message="Loading your tickets..." fullPage={false} />}
       {isError && <p className="text-red-600">Failed to load tickets.</p>}
       {!isLoading && ((data?.data?.length ?? 0) === 0) && (
         <p>No tickets found.</p>

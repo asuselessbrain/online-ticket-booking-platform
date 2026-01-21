@@ -12,7 +12,6 @@ const createTicket = async (req: Request, res: Response) => {
             data: result,
         });
     } catch (error) {
-        console.log(error)
         res.status(500).json({
             success: false,
             message: "Failed to create ticket",
@@ -187,6 +186,23 @@ const getSingleTicket = async (req: Request, res: Response) => {
     }
 }
 
+const getUniqueLocations = async (req: Request, res: Response) => {
+    try {
+        const result = await TicketService.getUniqueLocations();
+        res.status(200).json({
+            success: true,
+            message: "Locations retrieved successfully",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to retrieve locations",
+            error: error,
+        });
+    }
+}
+
 export const TicketController = {
     createTicket,
     myAddedTicket,
@@ -196,5 +212,6 @@ export const TicketController = {
     getAllTickets,
     addToAdvertisement,
     getApprovedTickets,
-    getSingleTicket
+    getSingleTicket,
+    getUniqueLocations
 };

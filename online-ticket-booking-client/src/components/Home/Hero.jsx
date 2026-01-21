@@ -1,6 +1,41 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { useQuery } from '@tanstack/react-query';
+import api from '../../lib/axios';
 import banner from '../../assets/images/banner.jpg';
 
 const Hero = () => {
+    const navigate = useNavigate();
+    const [mode, setMode] = useState('bus');
+    const [from, setFrom] = useState('');
+    const [to, setTo] = useState('');
+    const [date, setDate] = useState('');
+
+    const { data: locationsData } = useQuery({
+        queryKey: ['locations'],
+        queryFn: async () => {
+            const res = await api.get('/api/v1/tickets/locations');
+            return res.data?.data || { from: [], to: [] };
+        },
+    });
+
+    const fromLocations = locationsData?.from || [];
+    const toLocations = locationsData?.to || [];
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+
+        // Build query params from form data
+        const params = new URLSearchParams();
+        if (mode) params.append('transportType', mode);
+        if (from) params.append('from', from);
+        if (to) params.append('to', to);
+        if (date) params.append('departureDate', date);
+
+        // Navigate to all tickets page with search params
+        navigate(`/tickets?${params.toString()}`);
+    };
+
     return (
         <section className="bg-linear-to-b from-slate-50 to-white py-12 px-4">
             <div className="max-w-[1440px] mx-auto grid gap-8 items-center lg:grid-cols-2">
@@ -9,26 +44,70 @@ const Hero = () => {
                     <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight">Discover & Book Travel Tickets</h1>
                     <p className="text-slate-600 mt-3 mb-6">Find Bus, Train, Launch &amp; Plane tickets. Compare prices, choose seats, and book instantly — anywhere, anytime.</p>
 
-                    <form className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center" onSubmit={(e) => e.preventDefault()}>
-                        <select name="mode" aria-label="Travel mode" className="appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                    <form className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center" onSubmit={handleSearch}>
+                        <select
+                            name="mode"
+                            aria-label="Travel mode"
+                            className="appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                            value={mode}
+                            onChange={(e) => setMode(e.target.value)}
+                        >
                             <option value="bus">Bus</option>
                             <option value="train">Train</option>
                             <option value="launch">Launch</option>
-                            <option value="plane">Plane</option>
+                            <option value="air">Air</option>
                         </select>
 
-                        <input name="from" aria-label="From" placeholder="From — City / Station" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        <select
+                            name="from"
+                            aria-label="From"
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            value={from}
+                            onChange={(e) => setFrom(e.target.value)}
+                        >
+                            <option value="">From — City / Station</option>
+                            {fromLocations.map((loc) => (
+                                <option key={loc} value={loc}>{loc}</option>
+                            ))}
+                        </select>
 
-                        <input name="to" aria-label="To" placeholder="To — City / Station" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        <select
+                            name="to"
+                            aria-label="To"
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            value={to}
+                            onChange={(e) => setTo(e.target.value)}
+                        >
+                            <option value="">To — City / Station</option>
+                            {toLocations.map((loc) => (
+                                <option key={loc} value={loc}>{loc}</option>
+                            ))}
+                        </select>
 
-                        <input type="date" name="date" aria-label="Date" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        <input
+                            type="date"
+                            name="date"
+                            aria-label="Date"
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                        />
 
                         <button type="submit" className="w-full md:w-auto bg-[#01602a] text-white rounded-lg px-4 py-2 font-semibold">Search Tickets</button>
                     </form>
 
                     <div className="mt-4 flex gap-3">
                         <button className="rounded-lg border border-[#01602a] px-4 py-2 text-sm font-semibold">Become a Vendor</button>
-                        <button className="rounded-lg px-4 py-2 text-sm text-slate-800">How it works</button>
+                        <button
+                            onClick={() => {
+                                document.getElementById('how-it-works')?.scrollIntoView({
+                                    behavior: 'smooth',
+                                });
+                            }}
+                            className="rounded-lg px-4 py-2 text-sm text-slate-800 hover:text-[#01602a] transition"
+                        >
+                            How it works
+                        </button>
                     </div>
                 </div>
 

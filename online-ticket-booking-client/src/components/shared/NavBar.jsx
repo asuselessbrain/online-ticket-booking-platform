@@ -5,6 +5,7 @@ import { IoMenu } from "react-icons/io5";
 import { AuthContext } from "../../providers/AuthContext";
 import { toast } from "react-toastify";
 import useRole from "../../lib/userRole";
+import Loading from "./Loading";
 
 const NavBar = () => {
     const baseLinks = [
@@ -20,7 +21,7 @@ const NavBar = () => {
     const { role, roleLoading } = useRole()
 
     if (roleLoading) {
-        return <p>Loading....</p>
+        return <Loading fullPage message="Loading..." />;
     }
 
     const navLinks = user ? [...baseLinks, { name: 'Dashboard', link: `/${role}` }] : baseLinks;

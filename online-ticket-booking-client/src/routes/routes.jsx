@@ -24,6 +24,10 @@ import MyBookings from "../pages/User/MyBookings";
 import UserDashboard from "../Layouts/UserDashboard";
 import UserProfile from "../pages/User/Profile";
 import TransactionHistory from "../pages/User/TransactionHistory";
+import PaymentSuccess from "../pages/User/PaymentSuccess";
+import UserRoute from "./UserRoute";
+import VendorRoute from "./VendorRoute";
+import NotFound from "../pages/NotFound";
 
 const router = createBrowserRouter([
     {
@@ -63,13 +67,51 @@ const router = createBrowserRouter([
     {
         path: "/user",
         element: <PrivateRoute>
-            <UserDashboard />
+            <UserRoute>
+                <UserDashboard />
+            </UserRoute>
         </PrivateRoute>,
         children: [
-            { index: true, element: <UserProfile /> },
-            { path: "profile", element: <UserProfile /> },
-            { path: "my-bookings", element: <MyBookings /> },
-            { path: "transactions", element: <TransactionHistory /> },
+            {
+                index: true,
+                element: <PrivateRoute>
+                    <UserRoute>
+                        <UserProfile />
+                    </UserRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "profile",
+                element: <PrivateRoute>
+                    <UserRoute>
+                        <UserProfile />
+                    </UserRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "my-bookings",
+                element: <PrivateRoute>
+                    <UserRoute>
+                        <MyBookings />
+                    </UserRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "payment-success",
+                element: <PrivateRoute>
+                    <UserRoute>
+                        <PaymentSuccess />
+                    </UserRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "transactions",
+                element: <PrivateRoute>
+                    <UserRoute>
+                        <TransactionHistory />
+                    </UserRoute>
+                </PrivateRoute>
+            },
         ]
     },
     {
@@ -80,28 +122,109 @@ const router = createBrowserRouter([
             </AdminRoute>
         </PrivateRoute>,
         children: [
-            { index: true, element: <AdminProfile /> },
-            { path: "profile", element: <AdminProfile /> },
-            { path: "manage-tickets", element: <ManageTickets /> },
-            { path: "manage-users", element: <ManageUsers /> },
-            { path: "advertise-tickets", element: <AdvertiseTickets /> },
+            {
+                index: true,
+                element: <PrivateRoute>
+                    <AdminRoute>
+                        <AdminProfile />
+                    </AdminRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "profile",
+                element: <PrivateRoute>
+                    <AdminRoute>
+                        <AdminProfile />
+                    </AdminRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "manage-tickets",
+                element: <PrivateRoute>
+                    <AdminRoute>
+                        <ManageTickets />
+                    </AdminRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "manage-users",
+                element: <PrivateRoute>
+                    <AdminRoute>
+                        <ManageUsers />
+                    </AdminRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "advertise-tickets",
+                element: <PrivateRoute>
+                    <AdminRoute>
+                        <AdvertiseTickets />
+                    </AdminRoute>
+                </PrivateRoute>
+            },
         ]
     },
     {
         path: "/vendor",
-        element: <VendorDashboard />,
+        element: <PrivateRoute>
+            <VendorRoute>
+                <VendorDashboard />
+            </VendorRoute>
+        </PrivateRoute>,
         children: [
-            { index: true, element: <Profile /> },
-            { path: "profile", element: <Profile /> },
-            { path: "add-ticket", element: <AddTicket /> },
-            { path: "my-tickets", element: <MyTickets /> },
-            { path: "requested-bookings", element: <RequestedBookings /> },
-            { path: "revenue", element: <RevenueOverview /> }
+            {
+                index: true,
+                element: <PrivateRoute>
+                    <VendorRoute>
+                        <Profile />
+                    </VendorRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "profile",
+                element: <PrivateRoute>
+                    <VendorRoute>
+                        <Profile />
+                    </VendorRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "add-ticket",
+                element: <PrivateRoute>
+                    <VendorRoute>
+                        <AddTicket />
+                    </VendorRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "my-tickets",
+                element: <PrivateRoute>
+                    <VendorRoute>
+                        <MyTickets />
+                    </VendorRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "requested-bookings",
+                element: <PrivateRoute>
+                    <VendorRoute>
+                        <RequestedBookings />
+                    </VendorRoute>
+                </PrivateRoute>
+            },
+            {
+                path: "revenue",
+                element: <PrivateRoute>
+                    <VendorRoute>
+                        <RevenueOverview />
+                    </VendorRoute>
+                </PrivateRoute>
+            }
         ]
     },
     {
         path: "*",
-        element: <div>404 Not Found</div>
+        element: <NotFound />
     },
 
 ])

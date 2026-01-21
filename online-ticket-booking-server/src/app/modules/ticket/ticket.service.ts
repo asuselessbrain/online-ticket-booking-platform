@@ -4,13 +4,13 @@ import { ITicket } from "./ticket.type";
 type MyTicketsQuery = {
     page?: number;
     limit?: number;
-    sort?: "asc" | "desc"; // by createdAt
+    sort?: string;
     searchTerm?: string;
-    // Common filters
     transportType?: ITicket["transportType"];
     verificationStatus?: ITicket["verificationStatus"];
     from?: string;
     to?: string;
+    departureDate?: string;
     minPrice?: number;
     maxPrice?: number;
 };
@@ -35,6 +35,7 @@ const myAddedTicket = async (
         verificationStatus,
         from,
         to,
+        departureDate,
         minPrice,
         maxPrice,
     } = query;
@@ -61,6 +62,7 @@ const myAddedTicket = async (
     if (verificationStatus) filterAnd.push({ verificationStatus });
     if (from) filterAnd.push({ from });
     if (to) filterAnd.push({ to });
+    if (departureDate) filterAnd.push({ departureDate });
 
     // Price range filter
     if (minPrice !== undefined || maxPrice !== undefined) {
@@ -72,7 +74,20 @@ const myAddedTicket = async (
 
     const filters = filterAnd.length ? { $and: filterAnd } : {};
 
-    const sortStage: Record<string, "asc" | "desc"> = { createdAt: sort };
+    // Parse sort parameter: supports formats like "createdAt", "-createdAt", or "asc"/"desc"
+    let sortStage: Record<string, 1 | -1> = { createdAt: -1 };
+    if (typeof sort === 'string') {
+        if (sort === 'asc') {
+            sortStage = { createdAt: 1 };
+        } else if (sort === 'desc') {
+            sortStage = { createdAt: -1 };
+        } else if (sort.startsWith('-')) {
+            const field = sort.substring(1);
+            sortStage = { [field]: -1 };
+        } else {
+            sortStage = { [sort]: 1 };
+        }
+    }
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
@@ -151,6 +166,7 @@ const getAllTickets = async (
         verificationStatus,
         from,
         to,
+        departureDate,
         minPrice,
         maxPrice,
     } = query;
@@ -174,6 +190,7 @@ const getAllTickets = async (
     if (verificationStatus) filterAnd.push({ verificationStatus });
     if (from) filterAnd.push({ from });
     if (to) filterAnd.push({ to });
+    if (departureDate) filterAnd.push({ departureDate });
 
     if (minPrice !== undefined || maxPrice !== undefined) {
         const price: Record<string, number> = {};
@@ -183,7 +200,21 @@ const getAllTickets = async (
     }
 
     const filters = filterAnd.length ? { $and: filterAnd } : {};
-    const sortStage: Record<string, "asc" | "desc"> = { createdAt: sort };
+    
+    // Parse sort parameter: supports formats like "createdAt", "-createdAt", or "asc"/"desc"
+    let sortStage: Record<string, 1 | -1> = { createdAt: -1 };
+    if (typeof sort === 'string') {
+        if (sort === 'asc') {
+            sortStage = { createdAt: 1 };
+        } else if (sort === 'desc') {
+            sortStage = { createdAt: -1 };
+        } else if (sort.startsWith('-')) {
+            const field = sort.substring(1);
+            sortStage = { [field]: -1 };
+        } else {
+            sortStage = { [sort]: 1 };
+        }
+    }
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
@@ -212,11 +243,12 @@ const getApprovedTickets = async (
     const {
         page = 1,
         limit = 10,
-        sort = "desc",
+        sort = "-createdAt",
         searchTerm,
         transportType,
         from,
         to,
+        departureDate,
         minPrice,
         maxPrice,
     } = query;
@@ -239,6 +271,7 @@ const getApprovedTickets = async (
     if (transportType) filterAnd.push({ transportType });
     if (from) filterAnd.push({ from });
     if (to) filterAnd.push({ to });
+    if (departureDate) filterAnd.push({ departureDate });
 
     if (minPrice !== undefined || maxPrice !== undefined) {
         const price: Record<string, number> = {};
@@ -248,7 +281,21 @@ const getApprovedTickets = async (
     }
 
     const filters = { $and: filterAnd };
-    const sortStage: Record<string, "asc" | "desc"> = { createdAt: sort };
+    
+    let sortStage: Record<string, 1 | -1> = { createdAt: -1 };
+    if (typeof sort === 'string') {
+        if (sort === 'asc') {
+            sortStage = { createdAt: 1 };
+        } else if (sort === 'desc') {
+            sortStage = { createdAt: -1 };
+        } else if (sort.startsWith('-')) {
+            const field = sort.substring(1);
+            sortStage = { [field]: -1 };
+        } else {
+            sortStage = { [sort]: 1 };
+        }
+    }
+    
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
@@ -264,6 +311,18 @@ const getSingleTicket = async (ticketId: string): Promise<ITicket | null> => {
     return ticket as unknown as ITicket | null;
 }
 
+const getUniqueLocations = async (): Promise<{ from: string[]; to: string[] }> => {
+    const [fromLocations, toLocations] = await Promise.all([
+        TicketModel.distinct('from', { verificationStatus: 'approved' }),
+        TicketModel.distinct('to', { verificationStatus: 'approved' }),
+    ]);
+
+    return {
+        from: fromLocations.sort(),
+        to: toLocations.sort(),
+    };
+}
+
 export const TicketService = {
     createTicketIntoDB,
     myAddedTicket,
@@ -273,5 +332,6 @@ export const TicketService = {
     getAllTickets,
     addToAdvertisement,
     getApprovedTickets,
-    getSingleTicket
+    getSingleTicket,
+    getUniqueLocations
 };

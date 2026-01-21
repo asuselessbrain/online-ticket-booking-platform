@@ -11,11 +11,10 @@ const Registration = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const { createUser, updateUser } = use(AuthContext)
+    const { createUser, updateUser, logout } = use(AuthContext)
     const navigate = useNavigate()
 
     const handleLogin = async (data) => {
-        console.log(data);
         if (data.password !== data.confirmPassword) {
             return toast.error("Password and confirm Password must match")
         }
@@ -35,8 +34,6 @@ const Registration = () => {
                 const imgData = await imgRes.json()
                 const photoURL = imgData.secure_url
 
-                console.log(photoURL)
-
                 const payload = {
                     displayName: data.name,
                     photoURL
@@ -51,16 +48,15 @@ const Registration = () => {
                     imageUrl: photoURL
                 }
 
-                const result = await api.post('/api/v1/users', userData)
-                console.log(result)
+                await api.post('/api/v1/users', userData)
 
                 toast.success("Registration successful!")
                 navigate("/")
             }
 
         } catch (error) {
-            console.log(error)
-            // toast.error(error.message.split("/")[1].split(")")[0])
+            await logout()
+            toast.error(error.response?.data?.message || "Registration failed")
         }
 
     }

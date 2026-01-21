@@ -4,6 +4,7 @@ import { TicketController } from './ticket.controller';
 const router = express.Router();
 
 // Specific routes first before dynamic params
+router.get('/locations', TicketController.getUniqueLocations)
 router.get('/approved/list', TicketController.getApprovedTickets)
 router.post('/', TicketController.createTicket)
 router.get('/vendor/:vendorEmail', TicketController.myAddedTicket)

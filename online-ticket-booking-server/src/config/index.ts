@@ -8,5 +8,7 @@ export const config = {
   port: process.env.PORT,
   saltRounds: Number(process.env.SALT_ROUNDS),
   jwtSecret: process.env.JWT_SECRET as string,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN as string
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN as string,
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY as string,
+  siteDomain: process.env.SITE_DOMAIN as string
 };

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../lib/axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import Loading from '../../components/shared/Loading';
 
 const AdvertiseTickets = () => {
   const queryClient = useQueryClient();
@@ -142,12 +143,7 @@ const AdvertiseTickets = () => {
         </div>
       </div>
 
-      {isLoading && (
-        <div className="flex items-center gap-2 text-gray-600">
-          <span className="inline-block w-4 h-4 border-2 border-[#01602a] border-r-transparent rounded-full animate-spin" />
-          Loading approved tickets...
-        </div>
-      )}
+      {isLoading && <Loading message="Loading approved tickets..." />}
       {isError && (
         <p className="text-red-600">Failed to load tickets.</p>
       )}

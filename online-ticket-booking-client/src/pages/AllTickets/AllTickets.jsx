@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
+import Loading from "../../components/shared/Loading";
 
 const TicketCard = ({ t }) => {
   const departureDateTime = t.departureDate && t.departureTime 
@@ -71,18 +72,33 @@ const TicketCard = ({ t }) => {
 };
 
 const AllTickets = () => {
+  const [searchParams] = useSearchParams();
+  
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
   const [sort, setSort] = useState("desc");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [transportType, setTransportType] = useState("");
-  const [fromLoc, setFromLoc] = useState("");
-  const [toLoc, setToLoc] = useState("");
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('searchTerm') ?? "");
+  const [transportType, setTransportType] = useState(() => searchParams.get('transportType') ?? "");
+  const [fromLoc, setFromLoc] = useState(() => searchParams.get('from') ?? "");
+  const [toLoc, setToLoc] = useState(() => searchParams.get('to') ?? "");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [departureDate, setDepartureDate] = useState(() => searchParams.get('departureDate') ?? "");
+
+  // Fetch distinct locations (from/to) from backend
+  const { data: locationsData } = useQuery({
+    queryKey: ["locations"],
+    queryFn: async () => {
+      const res = await api.get('/api/v1/tickets/locations');
+      return res.data?.data || { from: [], to: [] };
+    },
+  });
+  const fromLocations = locationsData?.from || [];
+  const toLocations = locationsData?.to || [];
+  // States are initialized from URL params on mount via lazy initializers above.
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["approvedTickets", { page, limit, sort, searchTerm, transportType, fromLoc, toLoc, minPrice, maxPrice }],
+    queryKey: ["approvedTickets", { page, limit, sort, searchTerm, transportType, fromLoc, toLoc, departureDate, minPrice, maxPrice }],
     queryFn: async () => {
       const res = await api.get("/api/v1/tickets/approved/list", {
         params: {
@@ -93,6 +109,7 @@ const AllTickets = () => {
           transportType: transportType || undefined,
           from: fromLoc || undefined,
           to: toLoc || undefined,
+          departureDate: departureDate || undefined,
           minPrice: minPrice !== "" ? Number(minPrice) : undefined,
           maxPrice: maxPrice !== "" ? Number(maxPrice) : undefined,
         },
@@ -130,7 +147,7 @@ const AllTickets = () => {
                 <option value="bus">Bus</option>
                 <option value="train">Train</option>
                 <option value="air">Air</option>
-                <option value="ship">Ship</option>
+                <option value="launch">Launch</option>
               </select>
               <select
                 className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#01602a]"
@@ -149,6 +166,7 @@ const AllTickets = () => {
                   setToLoc("");
                   setMinPrice("");
                   setMaxPrice("");
+                  setDepartureDate("");
                   setSort("desc");
                   setPage(1);
                 }}
@@ -156,19 +174,27 @@ const AllTickets = () => {
                 Clear Filters
               </button>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <input
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <select
                 className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#01602a]"
-                placeholder="From"
                 value={fromLoc}
                 onChange={(e) => { setFromLoc(e.target.value); setPage(1); }}
-              />
-              <input
+              >
+                <option value="">From — City / Station</option>
+                {fromLocations.map((loc) => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+              <select
                 className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#01602a]"
-                placeholder="To"
                 value={toLoc}
                 onChange={(e) => { setToLoc(e.target.value); setPage(1); }}
-              />
+              >
+                <option value="">To — City / Station</option>
+                {toLocations.map((loc) => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
               <input
                 type="number"
                 min="0"
@@ -185,18 +211,17 @@ const AllTickets = () => {
                 value={maxPrice}
                 onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
               />
+              <input
+                type="date"
+                className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#01602a]"
+                value={departureDate}
+                onChange={(e) => { setDepartureDate(e.target.value); setPage(1); }}
+              />
             </div>
           </div>
         </div>
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="flex items-center gap-2 text-gray-600">
-              <span className="inline-block w-5 h-5 border-2 border-[#01602a] border-r-transparent rounded-full animate-spin" />
-              Loading tickets...
-            </div>
-          </div>
-        )}
+        {isLoading && <Loading message="Loading tickets..." fullPage={false} />}
 
         {isError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center text-red-600">

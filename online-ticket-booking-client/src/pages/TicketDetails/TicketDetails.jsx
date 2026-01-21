@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "../../lib/axios";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../providers/AuthContext";
+import Loading from "../../components/shared/Loading";
 
 const TicketDetails = () => {
   const { id } = useParams();
@@ -72,7 +73,7 @@ const TicketDetails = () => {
       toast.success("Booking submitted successfully!");
       setShowBookingModal(false);
       setBookingQuantity(1);
-      navigate("/my-bookings");
+      navigate("/user/my-bookings");
     },
     onError: (err) => {
       toast.error(err?.response?.data?.message || "Booking failed");
@@ -103,6 +104,7 @@ const TicketDetails = () => {
       quantity: bookingQuantity,
       userEmail: user.email,
       userName: user.displayName || user.email,
+      unitPrice: ticket.price,
       totalPrice: ticket.price * bookingQuantity,
       status: "pending",
     });
@@ -111,14 +113,7 @@ const TicketDetails = () => {
   const isBookingDisabled = !ticket || ticket.quantity === 0 || timeRemaining.expired;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex items-center gap-2 text-gray-600">
-          <span className="inline-block w-5 h-5 border-2 border-[#01602a] border-r-transparent rounded-full animate-spin" />
-          Loading ticket details...
-        </div>
-      </div>
-    );
+    return <Loading fullPage message="Loading ticket details..." />;
   }
 
   if (isError || !ticket) {
